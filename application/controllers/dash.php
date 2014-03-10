@@ -19,9 +19,4 @@ class Dash extends CI_Controller {
         $data['restaurants'] = $this->restaurant_model->get_restaurants();
         $this->load->view('dash/restaurants', $data);
     }
-
-    public function menus()
-    {
-        $this->load->view('dash/menus');
-    }
 }

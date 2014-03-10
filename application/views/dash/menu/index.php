@@ -23,8 +23,9 @@ foreach ($menuTypes as $menuType) {
         echo '<td>'.$menuItem['description'].'</td>';
         echo '<td>';
         $editItemUrl = sprintf('%smenuitem/edit/%s', base_url(), $menuItem['id']);
+        $deleteItemUrl = sprintf('%smenuitem/delete/%s', base_url(), $menuItem['id']);
         echo '<div class="btn-group"><a href="'.$editItemUrl.'"><button class="btn btn-primary">Edit</button></a></div>';
-        echo '<div class="btn-group"><button class="btn btn-danger">Delete</button></div>';
+        echo '<div class="btn-group"><a href="'.$deleteItemUrl.'"<button class="btn btn-danger">Delete</button></div>';
         echo '</td></tr>';
     }
     echo '</tbody></table><br/>';

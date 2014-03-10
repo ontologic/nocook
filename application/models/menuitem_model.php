@@ -38,4 +38,10 @@ class Menuitem_model extends CI_Model {
         $this->db->where('id', $id);
         return $this->db->update('menuitem', $data);
     }
+
+    public function delete_menuitem($id)
+    {
+        $this->db->where('id', $id);
+        return $this->db->delete('menuitem');
+    }
 }

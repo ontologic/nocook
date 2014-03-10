@@ -7,6 +7,8 @@ class Menuitem extends CI_Controller {
         parent::__construct();
         $this->load->model('menuitem_model');
         $this->load->helper('url');
+        $this->load->helper('form');
+        $this->load->library('form_validation');
     }
 
     public function create($restaurant, $type)
@@ -15,8 +17,6 @@ class Menuitem extends CI_Controller {
         {
             show_404();
         }
-        $this->load->helper('form');
-        $this->load->library('form_validation');
         $this->form_validation->set_rules('name', 'Name', 'required');
         $this->form_validation->set_rules('description', 'Description', 'required');
         if ($this->form_validation->run() === FALSE)
@@ -37,8 +37,6 @@ class Menuitem extends CI_Controller {
         {
             show_404();
         }
-        $this->load->helper('form');
-        $this->load->library('form_validation');
         $this->form_validation->set_rules('name', 'Name', 'required');
         $this->form_validation->set_rules('description', 'Description', 'required');
         if ($this->form_validation->run() === FALSE)
@@ -50,6 +48,26 @@ class Menuitem extends CI_Controller {
         {
             $this->menuitem_model->update_menuitem($id,
                 $this->input->post('name'), $this->input->post('description'));
+            //TODO: redirect to restaurant that owns item
+            redirect('menu/index/'.'1');
+        }
+    }
+
+    public function delete($id)
+    {
+        if($id == null)
+        {
+            show_404();
+        }
+        if (!$_POST)
+        {
+            $data['menuItem'] = $this->menuitem_model->get_menuitem($id);
+            $this->load->view('dash/menuitem/delete', $data);
+        }
+        else
+        {
+            $this->menuitem_model->delete_menuitem($id);
+            //TODO: redirect to restaurant that owns item
             redirect('menu/index/'.'1');
         }
     }
