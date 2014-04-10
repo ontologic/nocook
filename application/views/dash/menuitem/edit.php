@@ -17,6 +17,11 @@
         <textarea name="description" class="form-control" id="description" placeholder="Description"><?php echo $menuItem['description'];?></textarea><br />
     </div>
 
+    <div class="form-group">
+        <label for="price">Price</label>
+        <input type="text" name="price" class="form-control" id="price" placeholder="Price" value="<?php echo $menuItem['price'];?>" /><br />
+    </div>
+
     <input type="submit" name="submit" value="Update menu item" class="btn btn-default" />
 
     </form>

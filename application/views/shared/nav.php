@@ -5,7 +5,7 @@
             <div class="grid_13">
                 <ul class="nav">
                     <li class="nav-home"><a href="<?php echo base_url();?>home">Home</a></li>
-                    <li class="nav-about"><a href="<?php echo base_url();?>home/menu">Menu</a></li>
+                    <li class="nav-about"><a href="<?php echo base_url();?>home/zip">Menu</a></li>
                     <li class="nav-services"><a href="<?php echo base_url();?>home/orders">Orders</a></li>
                 </ul>
             </div>

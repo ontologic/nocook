@@ -39,6 +39,8 @@ class Menuitem extends CI_Controller {
         }
         $this->form_validation->set_rules('name', 'Name', 'required');
         $this->form_validation->set_rules('description', 'Description', 'required');
+        $this->form_validation->set_rules('price', 'Price', 'required');
+        $this->form_validation->set_rules('price', 'Price', 'decimal');
         if ($this->form_validation->run() === FALSE)
         {
             $data['menuItem'] = $this->menuitem_model->get_menuitem($id);
@@ -47,7 +49,7 @@ class Menuitem extends CI_Controller {
         else
         {
             $this->menuitem_model->update_menuitem($id,
-                $this->input->post('name'), $this->input->post('description'));
+                $this->input->post('name'), $this->input->post('description'), $this->input->post('price'));
             //TODO: redirect to restaurant that owns item
             redirect('menu/index/'.'1');
         }

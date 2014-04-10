@@ -29,11 +29,12 @@ class Menuitem_model extends CI_Model {
         return $this->db->insert('menuitem', $data);
     }
 
-    public function update_menuitem($id, $name, $description)
+    public function update_menuitem($id, $name, $description, $price)
     {
         $data = array(
             'name' => $name,
-            'description' => $description
+            'description' => $description,
+            'price' => $price
         );
         $this->db->where('id', $id);
         return $this->db->update('menuitem', $data);
