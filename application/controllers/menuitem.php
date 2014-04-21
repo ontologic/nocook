@@ -49,7 +49,7 @@ class Menuitem extends CI_Controller {
         else
         {
             $this->menuitem_model->update_menuitem($id,
-                $this->input->post('name'), $this->input->post('description'), $this->input->post('price'));
+                $this->input->post('name'), $this->input->post('description'));
             //TODO: redirect to restaurant that owns item
             redirect('menu/index/'.'1');
         }

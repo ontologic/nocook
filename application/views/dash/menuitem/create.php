@@ -17,10 +17,10 @@
     <textarea name="description" class="form-control" id="description" placeholder="Description"></textarea><br />
 </div>
 
-<div class="form-group">
+<!--<div class="form-group">
     <label for="price">Price</label>
     <input type="text" name="price" class="form-control" id="price" placeholder="price" /><br />
-</div>
+</div>-->
 
 <input type="submit" name="submit" value="Create menu item" class="btn btn-default" />
 

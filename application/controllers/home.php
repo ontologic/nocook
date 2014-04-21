@@ -8,11 +8,15 @@ class Home extends CI_Controller {
         $this->load->model('menuitem_model');
         $this->load->model('menuitemtype_model');
         $this->load->model('restaurant_model');
+        $this->load->model('address_model');
         $this->load->model('order_model');
+
         $this->load->helper('url');
         $this->load->helper('form');
+
         $this->load->library('form_validation');
         $this->load->library('cart');
+        $this->load->library('session');
 //      $this->form_validation->set_error_delimiters($this->config->item('error_start_delimiter', 'ion_auth'), $this->config->item('error_end_delimiter', 'ion_auth'));
 //
 //      $this->lang->load('auth');
@@ -26,8 +30,7 @@ class Home extends CI_Controller {
 
     public function zip()
     {
-        $this->form_validation->set_rules('zip', 'Zip Code', 'required');
-        $this->form_validation->set_rules('zip', 'Zip Code', 'exact_length[5]');
+        $this->form_validation->set_rules('zip', 'Zip Code', 'required|exact_length[5]');
         if ($this->form_validation->run() === FALSE)
         {
             $this->load->view('home/zip');
@@ -54,15 +57,34 @@ class Home extends CI_Controller {
         {
             redirect('home/zip');
         }
-        $this->form_validation->set_rules('1', '1', 'callback_order_check');
+        if(!$this->restaurant_model->does_restaurant_exist($zip))
+        {
+            redirect('home/zip');
+        }
+        $restaurant = $this->restaurant_model->get_restaurant_by_zip($zip);
+        $restaurantId = $restaurant['id'];
+        $data['menu'] = $this->menuitem_model->get_menuitems($restaurantId);
+        $data['menuTypes'] = $this->menuitemtype_model->get_menutypes_with_prices($restaurantId);
+        $data['restaurant'] = $this->restaurant_model->get_restaurant($restaurantId);
+        $data['zip'] = $zip;
+        $this->load->view('home/menu', $data);
+    }
+
+    public function order($zip = '')
+    {
+        if($zip == '')
+        {
+            redirect('home/zip');
+        }
+        $this->form_validation->set_rules('1', '1', 'callback_order_validation');
         if ($this->form_validation->run() === FALSE)
         {
             $restaurant = $this->restaurant_model->get_restaurant_by_zip($zip);
             $restaurantId = $restaurant['id'];
             $data['menu'] = $this->menuitem_model->get_menuitems($restaurantId);
-            $data['menuTypes'] = $this->menuitemtype_model->get_menutypes();
+            $data['menuTypes'] = $this->menuitemtype_model->get_menutypes_with_prices($restaurantId);
             $data['restaurant'] = $this->restaurant_model->get_restaurant($restaurantId);
-            $this->load->view('home/menu', $data);
+            $this->load->view('home/order', $data);
         }
         else
         {
@@ -71,9 +93,8 @@ class Home extends CI_Controller {
             $data = array();
             foreach ($_POST as $itemId => $quantity)
             {
-                if(!is_int($itemId)){ break; }
                 //echo 'q:' . $quantity . ' item:' . $itemId . '<br>';
-                $menuItem = $this->menuitem_model->get_menuitem($itemId);
+                $menuItem = $this->menuitem_model->get_menuitem_with_price($itemId);
                 //print_r($menuItem);
                 $itemToAdd = array(
                     'id'      => $itemId,
@@ -87,11 +108,12 @@ class Home extends CI_Controller {
             $this->cart->destroy();
             $this->cart->insert($data);
             //print_r($this->cart->contents());
-            redirect('home/confirm');
+            redirect('home/delivery');
         }
     }
 
-    public function order_check()
+    //Form validation for order POST
+    public function order_validation()
     {
         $totalQuantity = 0;
         foreach ($_POST as $itemId => $quantity)
@@ -112,10 +134,32 @@ class Home extends CI_Controller {
         return true;
     }
 
+    public function delivery()
+    {
+        $this->form_validation->set_rules('lineOne', 'Address Line One', 'required');
+        $this->form_validation->set_rules('city', 'City', 'required');
+        $this->form_validation->set_rules('state', 'State', 'required');
+        $this->form_validation->set_rules('zip', 'Zip Code', 'required|exact_length[5]');
+        $this->form_validation->set_rules('telephone', 'Telephone', 'required');
+        if ($this->form_validation->run() === FALSE)
+        {
+            $this->load->view('home/delivery');
+            return;
+        }
+        else
+        {
+            $this->session->set_userdata('delivery', $_POST);
+            redirect('home/confirm');
+        }
+    }
+
     public function confirm()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'GET')
         {
+            $deliveryData = $this->session->userdata('delivery');
+            print_r($deliveryData);
+            echo '<br><br>';
             //print_r($data);
             print_r($this->cart->contents());
             echo '<br><br>';
@@ -137,6 +181,17 @@ class Home extends CI_Controller {
         else if ($_SERVER['REQUEST_METHOD'] === 'POST')
         {
             //echo $_POST['stripeToken'];
+            $deliveryData = $this->session->userdata('delivery');
+            $address = $this->address_model->insert_address($deliveryData['lineOne'], $deliveryData['lineTwo'],
+                $deliveryData['city'], $deliveryData['state'], $deliveryData['zip'], $deliveryData['telephone']);
+
+            $order = $this->order_model->insert_order(1, $address, date_default_timezone_get());
+
+            $cartContents = $this->cart->contents();
+            foreach ($cartContents as $item)
+            {
+                $this->order_model->insert_order_menuitem($order, $item['id'], $item['qty']);
+            }
             redirect('home/checkout');
         }
         else
@@ -159,6 +214,8 @@ class Home extends CI_Controller {
 
     public function orders()
     {
-        $this->load->view('home/orders');
+        $order = $this->order_model->get_order(8);
+        print_r($order);
+        //$this->load->view('home/orders');
     }
 }

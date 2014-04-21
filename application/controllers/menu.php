@@ -14,7 +14,7 @@ class Menu extends CI_Controller {
     public function index($restaurant)
     {
         $data['menu'] = $this->menuitem_model->get_menuitems($restaurant);
-        $data['menuTypes'] = $this->menuitemtype_model->get_menutypes();
+        $data['menuTypes'] = $this->menuitemtype_model->get_menutypes_with_prices($restaurant);
         $data['restaurant'] = $this->restaurant_model->get_restaurant($restaurant);
         $this->load->view('dash/menu/index', $data);
     }

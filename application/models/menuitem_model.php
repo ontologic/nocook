@@ -12,6 +12,17 @@ class Menuitem_model extends CI_Model {
         return $query->row_array();
     }
 
+    public function get_menuitem_with_price($id)
+    {
+        $this->db->select('*');
+        $this->db->from('menuitem');
+        $this->db->join('restaurant_menuitemtype',
+            'menuitem.restaurant = restaurant_menuitemtype.restaurant AND menuitem.menuitemtype = restaurant_menuitemtype.menuitemtype');
+        $this->db->where('menuitem.id', $id);
+        $query = $this->db->get();
+        return $query->row_array();
+    }
+
     public function get_menuitems($restaurant)
     {
         $query = $this->db->get_where('menuitem', array('restaurant' => $restaurant));
@@ -22,19 +33,18 @@ class Menuitem_model extends CI_Model {
     {
         $data = array(
             'restaurant' => $restaurant,
-            'type' => $type,
+            'menuitemtype' => $type,
             'name' => $name,
             'description' => $description
         );
         return $this->db->insert('menuitem', $data);
     }
 
-    public function update_menuitem($id, $name, $description, $price)
+    public function update_menuitem($id, $name, $description)
     {
         $data = array(
             'name' => $name,
-            'description' => $description,
-            'price' => $price
+            'description' => $description
         );
         $this->db->where('id', $id);
         return $this->db->update('menuitem', $data);

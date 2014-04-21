@@ -5,7 +5,7 @@
 <div class="alert alert-warning">You menu is incomplete!</div>
 <?php
 foreach ($menuTypes as $menuType) {
-    $menuHeader = sprintf('<h4>%s (%s-%s)</h4>', $menuType['name'], $menuType['minimum'], $menuType['maximum']);
+    $menuHeader = sprintf('<h4>%s ($%s) (%s-%s)</h4>', $menuType['name'], $menuType['price'], $menuType['minimum'], $menuType['maximum']);
     echo $menuHeader;
     $createItemHref = sprintf('%smenuitem/create/%s/%s', base_url(), $restaurant['id'], $menuType['id']);
     echo '<a href="'.$createItemHref.'">';
@@ -14,7 +14,7 @@ foreach ($menuTypes as $menuType) {
 
     $findMenuItemsOfType = function ($menuItemType)
     {
-        return function ($item) use ($menuItemType) { return ($item['type'] == $menuItemType); };
+        return function ($item) use ($menuItemType) { return ($item['menuitemtype'] == $menuItemType); };
     };
     $menuItemsOfType = array_filter($menu, $findMenuItemsOfType($menuType['id']));
     foreach($menuItemsOfType as $menuItem)
@@ -22,7 +22,7 @@ foreach ($menuTypes as $menuType) {
         echo '<tr>';
         echo '<td>'.$menuItem['name'].'</td>';
         echo '<td>'.$menuItem['description'].'</td>';
-        echo '<td>'.$menuItem['price'].'</td>';
+        echo '<td>$'.$menuType['price'].'</td>';
         echo '<td>';
             $editItemUrl = sprintf('%smenuitem/edit/%s', base_url(), $menuItem['id']);
             $deleteItemUrl = sprintf('%smenuitem/delete/%s', base_url(), $menuItem['id']);
