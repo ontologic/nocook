@@ -61,13 +61,19 @@ class Home extends CI_Controller {
         {
             redirect('home/zip');
         }
-        $restaurant = $this->restaurant_model->get_restaurant_by_zip($zip);
-        $restaurantId = $restaurant['id'];
+        $restaurantId = $this->get_restaurant_id($zip);
         $data['menu'] = $this->menuitem_model->get_menuitems($restaurantId);
         $data['menuTypes'] = $this->menuitemtype_model->get_menutypes_with_prices($restaurantId);
         $data['restaurant'] = $this->restaurant_model->get_restaurant($restaurantId);
         $data['zip'] = $zip;
         $this->load->view('home/menu', $data);
+    }
+
+    private function get_restaurant_id($zip)
+    {
+        $restaurant = $this->restaurant_model->get_restaurant_by_zip($zip);
+        $restaurantId = $restaurant['id'];
+        return $restaurantId;
     }
 
     public function order($zip = '')
@@ -79,8 +85,7 @@ class Home extends CI_Controller {
         $this->form_validation->set_rules('1', '1', 'callback_order_validation');
         if ($this->form_validation->run() === FALSE)
         {
-            $restaurant = $this->restaurant_model->get_restaurant_by_zip($zip);
-            $restaurantId = $restaurant['id'];
+            $restaurantId = $this->get_restaurant_id($zip);
             $data['menu'] = $this->menuitem_model->get_menuitems($restaurantId);
             $data['menuTypes'] = $this->menuitemtype_model->get_menutypes_with_prices($restaurantId);
             $data['restaurant'] = $this->restaurant_model->get_restaurant($restaurantId);
@@ -88,8 +93,8 @@ class Home extends CI_Controller {
         }
         else
         {
-            //print_r($_POST);
-            //echo '<br><br/>';
+            $restaurantId = $this->get_restaurant_id($zip);
+            $this->session->set_userdata('restaurantId', $restaurantId);
             $data = array();
             foreach ($_POST as $itemId => $quantity)
             {
@@ -192,11 +197,16 @@ class Home extends CI_Controller {
                         "card" => $token)
                 );
                 //print_r($charge); echo $charge['id']; echo $charge['amount'];
+
+                echo 'eh';
+                print_r($this->session->all_userdata());
+
                 $deliveryData = $this->session->userdata('delivery');
                 $address = $this->address_model->insert_address($deliveryData['lineOne'], $deliveryData['lineTwo'],
                     $deliveryData['city'], $deliveryData['state'], $deliveryData['zip'], $deliveryData['telephone']);
 
-                $order = $this->order_model->insert_order(1, $address, date_default_timezone_get());
+                $restaurantId = $this->session->userdata('restaurantId');
+                $order = $this->order_model->insert_order($restaurantId, $address, date_default_timezone_get());
                 $amountInDecimal = $charge['amount'] / 100;
                 $this->order_model->insert_order_payment($order, $charge['id'], $amountInDecimal);
 
