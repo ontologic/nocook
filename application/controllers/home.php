@@ -168,7 +168,7 @@ class Home extends CI_Controller {
             echo '<form action="" method="POST">
                   <script
                     src="https://checkout.stripe.com/checkout.js" class="stripe-button"
-                    data-key="pk_test_6pRNASCoBOKtIshFeQd4XMUh"
+                    data-key="pk_test_NFIOMm4WLLZSkhEElOZn0KdH"
                     data-amount="'.($this->cart->total()*100).'"
                     data-name="Not Cooking Tonight"
                     data-description="$'.$this->cart->total().'"
@@ -180,19 +180,49 @@ class Home extends CI_Controller {
         }
         else if ($_SERVER['REQUEST_METHOD'] === 'POST')
         {
-            //echo $_POST['stripeToken'];
-            $deliveryData = $this->session->userdata('delivery');
-            $address = $this->address_model->insert_address($deliveryData['lineOne'], $deliveryData['lineTwo'],
-                $deliveryData['city'], $deliveryData['state'], $deliveryData['zip'], $deliveryData['telephone']);
-
-            $order = $this->order_model->insert_order(1, $address, date_default_timezone_get());
-
-            $cartContents = $this->cart->contents();
-            foreach ($cartContents as $item)
+            require_once(APPPATH.'libraries/stripe/Stripe.php');
+            Stripe::setApiKey("sk_test_4FLke6Tf0Ss8M0V9l9uUKifA");
+            $token = $_POST['stripeToken'];
+            try
             {
-                $this->order_model->insert_order_menuitem($order, $item['id'], $item['qty']);
+                $cartTotal = $this->cart->total();
+                $charge = Stripe_Charge::create(array(
+                        "amount" => ($cartTotal * 100), //amount in cents
+                        "currency" => "usd",
+                        "card" => $token)
+                );
+                //print_r($charge); echo $charge['id']; echo $charge['amount'];
+                $deliveryData = $this->session->userdata('delivery');
+                $address = $this->address_model->insert_address($deliveryData['lineOne'], $deliveryData['lineTwo'],
+                    $deliveryData['city'], $deliveryData['state'], $deliveryData['zip'], $deliveryData['telephone']);
+
+                $order = $this->order_model->insert_order(1, $address, date_default_timezone_get());
+                $amountInDecimal = $charge['amount'] / 100;
+                $this->order_model->insert_order_payment($order, $charge['id'], $amountInDecimal);
+
+                $cartContents = $this->cart->contents();
+                foreach ($cartContents as $item)
+                {
+                    $this->order_model->insert_order_menuitem($order, $item['id'], $item['qty']);
+                }
+                redirect('home/checkout');
             }
-            redirect('home/checkout');
+            catch(Stripe_InvalidRequestError $e)
+            {
+                //Bad (pub/private key mismatch) or repeat usage of token
+                echo $e;
+                return;
+            }
+            catch(Stripe_CardError $e)
+            {
+                //The card has been declined
+                echo $e;
+                return;
+            }
+            catch(Exception $e)
+            {
+                echo 'oh, shit?';
+            }
         }
         else
         {

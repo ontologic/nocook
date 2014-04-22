@@ -28,6 +28,16 @@ class Order_model extends CI_Model {
         return $this->db->insert_id();
     }
 
+    public function insert_order_payment($order, $stripeId, $amount)
+    {
+        $data = array(
+            'order' => $order,
+            'stripe_id' => $stripeId,
+            'amount' => $amount
+        );
+        $this->db->insert('order_payment', $data);
+    }
+
     public function insert_order_menuitem($order, $menuitem, $quantity)
     {
         $data = array(
