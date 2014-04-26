@@ -1,6 +1,6 @@
 <?php
 
-class Menu extends CI_Controller {
+class Dashmenu extends CI_Controller {
 
     function __construct()
     {

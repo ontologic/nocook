@@ -38,7 +38,12 @@
 |
 */
 
-//$route['menu/(:any)'] = 'dash/menu/$1';
+//Dash routes (this is horrible..surely there is a better way..)
+$route['dash/restaurant/index'] = 'dashrestaurant';
+$route['dash/restaurant/create'] = 'dashrestaurant/create';
+$route['dash/restaurant/edit/(:any)'] = 'dashrestaurant/edit/$1';
+$route['dash/restaurant/zip/index/(:any)'] = 'dashrestaurant/zip/$1';
+$route['dash/restaurant/zip/delete/(:any)'] = 'dashrestaurant/delete_zip/$1/$2';
 
 $route['default_controller'] = "home";
 $route['404_override'] = '';

@@ -16,20 +16,14 @@ class Dash extends CI_Controller {
         $this->load->view('dash/index');
     }
 
-    public function restaurants()
-    {
-        $this->authorize();
-        $data['restaurants'] = $this->restaurant_model->get_restaurants();
-        $this->load->view('dash/restaurants', $data);
-    }
-
     private function authorize()
     {
+        $dashGroups = array('admin', 'Operator');
         if (!$this->ion_auth->logged_in())
         {
-            redirect('auth/login', 'refresh');
+            redirect('home/login', 'refresh');
         }
-        elseif (!$this->ion_auth->is_admin())
+        else if (!$this->ion_auth->in_group($dashGroups))
         {
             return show_error('You must be an administrator to view this page.');
         }

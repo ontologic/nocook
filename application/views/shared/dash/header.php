@@ -56,10 +56,10 @@
             <a class="brand" href="<?php echo base_url();?>dash">Not Cooking Tonight</a>
             <div class="nav-collapse collapse">
                 <p class="navbar-text pull-right">
-                    Logged in as <a href="#" class="navbar-link">Username</a>
+                    Logged in as <?php echo $this->ion_auth->user()->row()->username; ?> <a href="<?php echo base_url(); ?>home/logout" class="navbar-link">Log out</a>
                 </p>
                 <ul class="nav">
-                    <li class="active"><a href="<?php echo base_url();?>dash">Dash</a></li>
+                    <!--<li class="active"><a href="<?php echo base_url();?>dash">Dash</a></li>-->
                 </ul>
             </div>
         </div>
