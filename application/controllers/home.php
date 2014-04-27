@@ -10,6 +10,7 @@ class Home extends CI_Controller {
         $this->load->model('restaurant_model');
         $this->load->model('address_model');
         $this->load->model('order_model');
+        $this->load->model('gift_model');
 
         $this->load->helper('url');
         $this->load->helper('form');
@@ -99,8 +100,9 @@ class Home extends CI_Controller {
         }
         else
         {
-            $restaurantId = $this->get_restaurant_id($zip);
-            $this->session->set_userdata('restaurantId', $restaurantId);
+            $restaurant = $this->restaurant_model->get_restaurant_by_zip($zip);
+            $this->session->set_userdata('restaurant', $restaurant);
+            $this->session->set_userdata('is_gift', false);
             $data = array();
             foreach ($_POST as $itemId => $quantity)
             {
@@ -145,6 +147,70 @@ class Home extends CI_Controller {
         return true;
     }
 
+    public function gift($zip = '')
+    {
+        if($zip == '')
+        {
+            redirect('home/zip');
+        }
+        $this->form_validation->set_rules('1', '1', 'callback_order_validation');
+        if ($this->form_validation->run() === FALSE)
+        {
+            $restaurantId = $this->get_restaurant_id($zip);
+            $data['menu'] = $this->menuitem_model->get_menuitems($restaurantId);
+            $data['menuTypes'] = $this->menuitemtype_model->get_menutypes_with_prices($restaurantId);
+            $data['restaurant'] = $this->restaurant_model->get_restaurant($restaurantId);
+            $this->load->view('home/gift', $data);
+        }
+        else
+        {
+            $restaurant = $this->restaurant_model->get_restaurant_by_zip($zip);
+            $this->session->set_userdata('restaurant', $restaurant);
+            $this->session->set_userdata('is_gift', true);
+            $data = array();
+            foreach ($_POST as $itemId => $quantity)
+            {
+                //echo 'q:' . $quantity . ' item:' . $itemId . '<br>';
+                $menuItem = $this->menuitem_model->get_menuitem_with_price($itemId);
+                //print_r($menuItem);
+                $itemToAdd = array(
+                    'id'      => $itemId,
+                    'qty'     => $quantity,
+                    'price'   => $menuItem['price'],
+                    'name'    => $menuItem['name']
+                );
+                array_push($data, $itemToAdd);
+            }
+            //print_r($data);
+            $this->cart->destroy();
+            $this->cart->insert($data);
+            //print_r($this->cart->contents());
+            redirect('home/confirm');
+        }
+    }
+
+    //Form validation for order POST
+    public function gift_validation()
+    {
+        $totalQuantity = 0;
+        foreach ($_POST as $itemId => $quantity)
+        {
+            if(!is_int($itemId)){ break; }
+            if($quantity < 0)
+            {
+                $this->form_validation->set_message('gift_validation', 'All quantities must be positive values.');
+                return false;
+            }
+            $totalQuantity += $quantity;
+        }
+        if($totalQuantity == 0)
+        {
+            $this->form_validation->set_message('order_validation', 'You must order at least one item.');
+            return false;
+        }
+        return true;
+    }
+
     public function delivery()
     {
         $this->form_validation->set_rules('lineOne', 'Address Line One', 'required');
@@ -166,11 +232,16 @@ class Home extends CI_Controller {
 
     public function confirm()
     {
+        //TODO: handle this if navigating directly to confirm?
+        $is_gift = $this->session->userdata('is_gift');
         if ($_SERVER['REQUEST_METHOD'] === 'GET')
         {
-            $deliveryData = $this->session->userdata('delivery');
-            print_r($deliveryData);
-            echo '<br><br>';
+            if(!$is_gift)
+            {
+                $deliveryData = $this->session->userdata('delivery');
+                print_r($deliveryData);
+                echo '<br><br>';
+            }
             //print_r($data);
             print_r($this->cart->contents());
             echo '<br><br>';
@@ -186,7 +257,6 @@ class Home extends CI_Controller {
                     data-image="../assets/img/salad.jpg">
                   </script>
                 </form>';
-            //echo '<input type="submit"></form>';
             echo '</form>';
         }
         else if ($_SERVER['REQUEST_METHOD'] === 'POST')
@@ -202,24 +272,39 @@ class Home extends CI_Controller {
                         "currency" => "usd",
                         "card" => $token)
                 );
+
                 //print_r($charge); echo $charge['id']; echo $charge['amount'];
+                //print_r($this->session->all_userdata());
 
-                echo 'eh';
-                print_r($this->session->all_userdata());
-
-                $deliveryData = $this->session->userdata('delivery');
-                $address = $this->address_model->insert_address($deliveryData['lineOne'], $deliveryData['lineTwo'],
-                    $deliveryData['city'], $deliveryData['state'], $deliveryData['zip'], $deliveryData['telephone']);
-
-                $restaurantId = $this->session->userdata('restaurantId');
-                $order = $this->order_model->insert_order($restaurantId, $address, date_default_timezone_get());
-                $amountInDecimal = $charge['amount'] / 100;
-                $this->order_model->insert_order_payment($order, $charge['id'], $amountInDecimal);
-
-                $cartContents = $this->cart->contents();
-                foreach ($cartContents as $item)
+                if(!$is_gift)
                 {
-                    $this->order_model->insert_order_menuitem($order, $item['id'], $item['qty']);
+                    $deliveryData = $this->session->userdata('delivery');
+                    $address = $this->address_model->insert_address($deliveryData['lineOne'], $deliveryData['lineTwo'],
+                        $deliveryData['city'], $deliveryData['state'], $deliveryData['zip'], $deliveryData['telephone']);
+
+                    $restaurant = $this->session->userdata('restaurant');
+                    $order = $this->order_model->insert_order($restaurant['id'], $address, date_default_timezone_get());
+                    $amountInDecimal = $charge['amount'] / 100;
+                    $this->order_model->insert_order_payment($order, $charge['id'], $amountInDecimal);
+
+                    $cartContents = $this->cart->contents();
+                    foreach ($cartContents as $item)
+                    {
+                        $this->order_model->insert_order_menuitem($order, $item['id'], $item['qty']);
+                    }
+                }
+                else
+                {
+                    $restaurant = $this->session->userdata('restaurant');
+                    $gift = $this->gift_model->insert_gift($restaurant['id'], 'runtheexe@gmail.com');
+                    $amountInDecimal = $charge['amount'] / 100;
+                    $this->gift_model->insert_gift_payment($gift, $charge['id'], $amountInDecimal);
+
+                    $cartContents = $this->cart->contents();
+                    foreach ($cartContents as $itemtype)
+                    {
+                        $this->gift_model->insert_gift_menuitemtype($gift, $itemtype['id'], $itemtype['qty']);
+                    }
                 }
                 redirect('home/checkout');
             }

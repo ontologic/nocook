@@ -24,7 +24,7 @@
     }
     ?>
     <a href="<?php echo base_url();?>home/order/<?php echo $zip;?>"><button class="btn btn-default">Order</button></a>
-    <button class="btn btn-default">Order as Gift</button>
+    <a href="<?php echo base_url();?>home/gift/<?php echo $zip;?>"><button class="btn btn-default">Order as Gift</button></a>
 </div><!-- end of container-->
 
 <?php $this->load->view('shared/footer') ?>
