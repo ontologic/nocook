@@ -17,9 +17,10 @@ class Order_model extends CI_Model {
         return $query->result_array();
     }
 
-    public function insert_order($restaurant, $address, $date)
+    public function insert_order($user, $restaurant, $address, $date)
     {
         $data = array(
+            'user' => $user,
             'restaurant' => $restaurant,
             'address' => $address,
             'delivery_date' => $date

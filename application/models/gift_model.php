@@ -6,9 +6,15 @@ class Gift_model extends CI_Model {
         $this->load->database();
     }
 
-    public function insert_gift($restaurant, $recipient)
+    public function get_get($gift)
+    {
+
+    }
+
+    public function insert_gift($from_user, $restaurant, $recipient)
     {
         $data = array(
+            'from_user' => $from_user,
             'restaurant' => $restaurant,
             'recipient' => $recipient
         );

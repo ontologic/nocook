@@ -3,7 +3,7 @@
 
 <div id="infoMessage"><?php echo $message;?></div>
 
-<?php echo form_open("home/login");?>
+<?php echo form_open();?>
 
 <p>
     <?php echo lang('login_identity_label', 'identity');?>
