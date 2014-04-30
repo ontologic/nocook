@@ -234,7 +234,8 @@ class Home extends CI_Controller {
     {
         if(!$this->ion_auth->logged_in())
         {
-            redirect('home/login/confirm');
+            redirect('home/login/home_confirm');
+            return;
         }
 
         //TODO: handle this if navigating directly to confirm?
@@ -435,7 +436,8 @@ class Home extends CI_Controller {
                 else {
                     if($redirect != null)
                     {
-                        redirect('home/'.$redirect, 'refresh');
+                        $target = str_replace("_", "/", $redirect);
+                        redirect($target, 'refresh');
                         return;
                     }
                     redirect('/', 'refresh');

@@ -6,9 +6,20 @@ class Gift_model extends CI_Model {
         $this->load->database();
     }
 
-    public function get_get($gift)
+    public function get_gift($gift)
     {
+        $query = $this->db->get_where('gift', array('id'=>$gift));
+        return $query->row_array();
+    }
 
+    public function get_gift_menuitemtypes($gift)
+    {
+        $this->db->select('*');
+        $this->db->from('gift_menuitemtype');
+        $this->db->join('menuitemtype', 'gift_menuitemtype.menuitemtype = menuitemtype.id');
+        $this->db->where('gift_menuitemtype.gift', $gift);
+        $query = $this->db->get();
+        return $query->result_array();
     }
 
     public function insert_gift($from_user, $restaurant, $recipient)

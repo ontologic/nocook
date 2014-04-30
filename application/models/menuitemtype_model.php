@@ -22,4 +22,10 @@ class Menuitemtype_model extends CI_Model {
         $query = $this->db->get();
         return $query->result_array();
     }
+
+    public function get_menuitemtype($item)
+    {
+        $query = $this->db->get_where('menuitem', array('id'=>$item));
+        return $query->row_array();
+    }
 }
