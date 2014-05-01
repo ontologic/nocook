@@ -102,7 +102,7 @@ class Gift extends CI_Controller {
         foreach($itemTypeCounts as $itemType => $quantityUserIsOrdering)
         {
             $giftOfType = array_filter($giftItems, $findGiftOfType($itemType));
-            $quantityAllottedInGift = reset($giftOfType)['quantity'];
+            //$quantityAllottedInGift = reset($giftOfType)['quantity'];
             if(reset($giftOfType)['quantity'] != $quantityUserIsOrdering)
             {
                 $this->form_validation->set_message('gift_validation', 'You must order the correct amount of each item type.');

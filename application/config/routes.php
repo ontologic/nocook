@@ -44,6 +44,9 @@ $route['dash/restaurant/create'] = 'dashrestaurant/create';
 $route['dash/restaurant/edit/(:any)'] = 'dashrestaurant/edit/$1';
 $route['dash/restaurant/zip/index/(:any)'] = 'dashrestaurant/zip/$1';
 $route['dash/restaurant/zip/delete/(:any)'] = 'dashrestaurant/delete_zip/$1/$2';
+$route['dash/manage/index'] = 'dashmanage';
+$route['dash/manage/create'] = 'dashmanage/create';
+$route['dash/manage/edit/(:any)'] = 'dashmanage/edit/$1';
 
 $route['default_controller'] = "home";
 $route['404_override'] = '';

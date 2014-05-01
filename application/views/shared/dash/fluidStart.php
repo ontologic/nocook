@@ -7,9 +7,10 @@
                     <!--<li class="active"><a href="#">Link</a></li>-->
                     <?php
                         if($this->ion_auth->in_group('admin')){
-                            echo '<li><a href="'.base_url().'dash/restaurants">Sales</a></li>';
-                            echo '<li><a href="'.base_url().'dash/restaurants">Edit/Delete Orders</a></li>';
+                            echo '<li><a href="'.base_url().'dash/restaurants">Sales (BROKEN LINK)</a></li>';
+                            echo '<li><a href="'.base_url().'dash/restaurants">Edit/Delete Orders (BROKEN LINK)</a></li>';
                             echo '<li><a href="'.base_url().'dash/restaurant/index">Restaurants</a></li>';
+                            echo '<li><a href="'.base_url().'dash/manage/index">Manage user</a></li>';
                         } else if($this->ion_auth->in_group('Operator')){
                             echo '<li><a href="dash/restaurants">Menu</a></li>';
                         } else if($this->ion_auth->in_group('Manager')){
