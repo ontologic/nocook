@@ -6,7 +6,13 @@ class Order_model extends CI_Model {
         $this->load->database();
     }
 
-    public function get_order($order)
+    public function get_order($id)
+    {
+        $query = $this->db->get_where('order', array('id'=>$id));
+        return $query->row_array();
+    }
+
+    public function get_order_menuitems($order)
     {
         $this->db->select('*');
         $this->db->from('order_menuitem');

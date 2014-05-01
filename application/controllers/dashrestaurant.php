@@ -6,9 +6,12 @@ class Dashrestaurant extends CI_Controller {
     {
         parent::__construct();
         $this->load->model('restaurant_model');
+        $this->load->model('address_model');
+
         $this->load->helper('url');
-        $this->load->library('ion_auth');
         $this->load->helper('form');
+
+        $this->load->library('ion_auth');
         $this->load->library('form_validation');
     }
 
@@ -38,13 +41,21 @@ class Dashrestaurant extends CI_Controller {
         $this->form_validation->set_rules('tax_percent', 'Tax Percent', 'decimal');
         $this->form_validation->set_rules('stripe_public_key', 'Stripe Public Key', 'required');
         $this->form_validation->set_rules('stripe_secret_key', 'Stripe Secret Key', 'required');
+
+        $this->form_validation->set_rules('lineOne', 'Address Line One', 'required');
+        $this->form_validation->set_rules('city', 'City', 'required');
+        $this->form_validation->set_rules('state', 'State', 'required');
+        $this->form_validation->set_rules('zip', 'Zip Code', 'required|exact_length[5]');
+        $this->form_validation->set_rules('telephone', 'Telephone', 'required');
         if ($this->form_validation->run() === FALSE)
         {
             $this->load->view('dash/restaurant/create');
         }
         else
         {
-            $this->restaurant_model->create_restaurant($this->input->post('name'), $this->input->post('tax_percent'),
+            $address = $this->address_model->insert_address($this->input->post('lineOne'), $this->input->post('lineTwo'),
+                $this->input->post('city'), $this->input->post('state'), $this->input->post('zip'), $this->input->post('telephone'));
+            $this->restaurant_model->create_restaurant($this->input->post('name'), $address, $this->input->post('tax_percent'),
                 $this->input->post('stripe_public_key'), $this->input->post('stripe_secret_key'));
             redirect('dash/restaurant/index');
         }
@@ -62,16 +73,25 @@ class Dashrestaurant extends CI_Controller {
         $this->form_validation->set_rules('tax_percent', 'Tax Percent', 'decimal');
         $this->form_validation->set_rules('stripe_public_key', 'Stripe Public Key', 'required');
         $this->form_validation->set_rules('stripe_secret_key', 'Stripe Secret Key', 'required');
+
+        $this->form_validation->set_rules('lineOne', 'Address Line One', 'required');
+        $this->form_validation->set_rules('city', 'City', 'required');
+        $this->form_validation->set_rules('state', 'State', 'required');
+        $this->form_validation->set_rules('zip', 'Zip Code', 'required|exact_length[5]');
+        $this->form_validation->set_rules('telephone', 'Telephone', 'required');
         if ($this->form_validation->run() === FALSE)
         {
-            $data['restaurant'] = $this->restaurant_model->get_restaurant($id);
+            $data['restaurant'] = $this->restaurant_model->get_restaurant_with_address($id);
             $this->load->view('dash/restaurant/edit', $data);
         }
         else
         {
             $this->restaurant_model->update_restaurant($id,
                 $this->input->post('name'), $this->input->post('tax_percent'),
-                $this->input->post('stripe_public_key'), $this->input->post('stripe_secret_key'));
+                $this->input->post('stripe_public_key'), $this->input->post('stripe_secret_key'),
+                $this->input->post('lineOne'), $this->input->post('lineTwo'),
+                $this->input->post('city'), $this->input->post('state'), $this->input->post('zip'), $this->input->post('telephone')
+            );
             redirect('dash/restaurant/index');
         }
     }

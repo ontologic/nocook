@@ -19,4 +19,10 @@ class Address_model extends CI_Model {
         $this->db->insert('address', $data);
         return $this->db->insert_id();
     }
+
+    public function get_address($id)
+    {
+        $query = $this->db->get_where('address', array('id'=>$id));
+        return $query->row_array();
+    }
 }

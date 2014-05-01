@@ -357,7 +357,7 @@ class Home extends CI_Controller {
 
     public function orders()
     {
-        $order = $this->order_model->get_order(8);
+        $order = $this->order_model->get_order_menuitems(8);
         print_r($order);
         //$this->load->view('home/orders');
     }
