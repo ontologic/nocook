@@ -28,4 +28,16 @@ class Menuitemtype_model extends CI_Model {
         $query = $this->db->get_where('menuitem', array('id'=>$item));
         return $query->row_array();
     }
+
+    public function get_menuitemtype_with_price($restaurant, $menuitemtype)
+    {
+        $this->db->select('*');
+        $this->db->from('menuitemtype');
+        $this->db->join('restaurant_menuitemtype',
+            'menuitemtype.id = restaurant_menuitemtype.menuitemtype');
+        $this->db->where('restaurant_menuitemtype.restaurant', $restaurant);
+        $this->db->where('menuitemtype.id', $menuitemtype);
+        $query = $this->db->get();
+        return $query->row_array();
+    }
 }

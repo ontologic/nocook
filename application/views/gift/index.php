@@ -11,7 +11,8 @@
                 return function ($giftItem) use ($menuItemType) { return $giftItem['menuitemtype'] == $menuItemType; };
             };
             $giftOfType = array_filter($giftItems, $findGiftOfType($menuType['id']));
-            $quantityOfGiftType = count($giftOfType) == 0 ? 0 : reset($giftOfType)['quantity'];
+            $wtf = reset($giftOfType);
+            $quantityOfGiftType = count($giftOfType) == 0 ? 0 : $wtf['quantity'];
 
             $menuHeader = sprintf('<h4>%s ($%s) <strong>Choose %d</strong></h4>', $menuType['name'], $menuType['price'], $quantityOfGiftType);
             echo $menuHeader;

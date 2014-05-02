@@ -106,16 +106,19 @@ class Home extends CI_Controller {
             $data = array();
             foreach ($_POST as $itemId => $quantity)
             {
-                //echo 'q:' . $quantity . ' item:' . $itemId . '<br>';
-                $menuItem = $this->menuitem_model->get_menuitem_with_price($itemId);
-                //print_r($menuItem);
-                $itemToAdd = array(
-                    'id'      => $itemId,
-                    'qty'     => $quantity,
-                    'price'   => $menuItem['price'],
-                    'name'    => $menuItem['name']
-                );
-                array_push($data, $itemToAdd);
+                if($quantity > 0)
+                {
+                    //echo 'q:' . $quantity . ' item:' . $itemId . '<br>';
+                    $menuItem = $this->menuitem_model->get_menuitem_with_price($itemId);
+                    //print_r($menuItem);
+                    $itemToAdd = array(
+                        'id'      => $itemId,
+                        'qty'     => $quantity,
+                        'price'   => $menuItem['price'],
+                        'name'    => $menuItem['name']
+                    );
+                    array_push($data, $itemToAdd);
+                }
             }
             //print_r($data);
             $this->cart->destroy();
@@ -168,22 +171,28 @@ class Home extends CI_Controller {
             $this->session->set_userdata('restaurant', $restaurant);
             $this->session->set_userdata('is_gift', true);
             $data = array();
-            foreach ($_POST as $itemId => $quantity)
+            foreach ($_POST as $itemType => $quantity)
             {
-                //echo 'q:' . $quantity . ' item:' . $itemId . '<br>';
-                $menuItem = $this->menuitem_model->get_menuitem_with_price($itemId);
-                //print_r($menuItem);
-                $itemToAdd = array(
-                    'id'      => $itemId,
-                    'qty'     => $quantity,
-                    'price'   => $menuItem['price'],
-                    'name'    => $menuItem['name']
-                );
-                array_push($data, $itemToAdd);
+                if($quantity > 0)
+                {
+                    //echo 'q:' . $quantity . ' item:' . $itemId . '<br>';
+                    $menuItemType = $this->menuitemtype_model->get_menuitemtype_with_price($restaurant['id'], $itemType);
+                    //print_r($menuItemType);
+                    $itemToAdd = array(
+                        'id'      => $itemType,
+                        'qty'     => $quantity,
+                        'price'   => $menuItemType['price'],
+                        'name'    => $menuItemType['name']
+                    );
+                    array_push($data, $itemToAdd);
+                }
             }
+            //echo '<br/><br/>';
             //print_r($data);
             $this->cart->destroy();
             $this->cart->insert($data);
+
+            //echo '<br/><br/>';
             //print_r($this->cart->contents());
             redirect('home/confirm');
         }
