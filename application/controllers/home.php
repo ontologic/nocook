@@ -88,14 +88,17 @@ class Home extends CI_Controller {
         {
             redirect('home/zip');
         }
-        //TODO: figure out how to do this!
-        $this->form_validation->set_rules('1', '1', 'callback_order_validation');
+
+        $restaurant = $this->restaurant_model->get_restaurant_by_zip($zip);
+        $menu = $this->menuitem_model->get_menuitems($restaurant['id']);
+        $firstMenuItem = reset($menu);
+
+        $this->form_validation->set_rules($firstMenuItem['id'], $firstMenuItem['id'], 'callback_order_validation');
         if ($this->form_validation->run() === FALSE)
         {
-            $restaurantId = $this->get_restaurant_id($zip);
-            $data['menu'] = $this->menuitem_model->get_menuitems($restaurantId);
-            $data['menuTypes'] = $this->menuitemtype_model->get_menutypes_with_prices($restaurantId);
-            $data['restaurant'] = $this->restaurant_model->get_restaurant($restaurantId);
+            $data['restaurant'] = $restaurant;
+            $data['menu'] = $menu;
+            $data['menuTypes'] = $this->menuitemtype_model->get_menutypes_with_prices($restaurant['id']);
             $this->load->view('home/order', $data);
         }
         else
@@ -156,6 +159,7 @@ class Home extends CI_Controller {
         {
             redirect('home/zip');
         }
+        //TODO: This will work as long as you have a menuitemtype of 1
         $this->form_validation->set_rules('1', '1', 'callback_order_validation');
         if ($this->form_validation->run() === FALSE)
         {
@@ -273,7 +277,8 @@ class Home extends CI_Controller {
                     data-amount="'.($this->cart->total()*100).'"
                     data-name="Not Cooking Tonight"
                     data-description="$'.$this->cart->total().'"
-                    data-image="../assets/img/salad.jpg">
+                    data-image="../assets/img/salad.jpg"
+                    data-email="'.$this->ion_auth->user()->row()->email.'">
                   </script>
                 </form>';
             echo '</form>';
@@ -396,24 +401,64 @@ class Home extends CI_Controller {
 
             $additional_data = array(
                 'first_name' => $this->input->post('first_name'),
-                'last_name'  => $this->input->post('last_name')//,
-                //'company'    => $this->input->post('company'),
-                //'phone'      => $this->input->post('phone'),
+                'last_name'  => $this->input->post('last_name')
             );
         }
         if ($this->form_validation->run() == true && $this->ion_auth->register($username, $password, $email, $additional_data))
         {
+            //log the user in
+            $this->ion_auth->login($this->input->post('email'), $this->input->post('password'));
+
             //check to see if we are creating the user
             //redirect them back to the admin page
             $this->session->set_flashdata('message', $this->ion_auth->messages());
-            redirect("auth", 'refresh');
+            if($redirect != null)
+            {
+                $target = str_replace("_", "/", $redirect);
+                redirect($target, 'refresh');
+                return;
+            }
+            redirect('/', 'refresh');
+            return;
         }
         else
         {
             //display the create user form
             //set the flash data error message if there is one
             $this->data['message'] = (validation_errors() ? validation_errors() : ($this->ion_auth->errors() ? $this->ion_auth->errors() : $this->session->flashdata('message')));
-            $this->_render_page('home', $this->data);
+
+            $this->data['first_name'] = array(
+                'name'  => 'first_name',
+                'id'    => 'first_name',
+                'type'  => 'text',
+                'value' => $this->form_validation->set_value('first_name'),
+            );
+            $this->data['last_name'] = array(
+                'name'  => 'last_name',
+                'id'    => 'last_name',
+                'type'  => 'text',
+                'value' => $this->form_validation->set_value('last_name'),
+            );
+            $this->data['email'] = array(
+                'name'  => 'email',
+                'id'    => 'email',
+                'type'  => 'text',
+                'value' => $this->form_validation->set_value('email'),
+            );
+            $this->data['password'] = array(
+                'name'  => 'password',
+                'id'    => 'password',
+                'type'  => 'password',
+                'value' => $this->form_validation->set_value('password'),
+            );
+            $this->data['password_confirm'] = array(
+                'name'  => 'password_confirm',
+                'id'    => 'password_confirm',
+                'type'  => 'password',
+                'value' => $this->form_validation->set_value('password_confirm'),
+            );
+
+            $this->load->view('home/register', $this->data);
         }
     }
 
@@ -463,6 +508,9 @@ class Home extends CI_Controller {
         }
         else
         {
+            //for building the register link
+            $this->data['redirect'] = $redirect;
+
             //the user is not logging in so display the login page
             //set the flash data error message if there is one
             $this->data['message'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('message');

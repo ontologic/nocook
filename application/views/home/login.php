@@ -25,4 +25,6 @@
 
 <?php echo form_close();?>
 
+<a href="<?php echo base_url(); ?>home/register/<?php echo $redirect; ?>"><button>Register</button></a>
+
 <p><a href="forgot_password"><?php echo lang('login_forgot_password');?></a></p>

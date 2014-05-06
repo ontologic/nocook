@@ -25,7 +25,7 @@ class Gift extends CI_Controller {
         $gift = $this->gift_model->get_gift($gift);
         $this->session->set_userdata('gift', $gift);
 
-        //TODO: figure out how to do this!
+        //TODO: This will work as long as you have a menuitemtype of 1
         $this->form_validation->set_rules('1', '1', 'callback_gift_validation');
         if ($this->form_validation->run() === FALSE)
         {
