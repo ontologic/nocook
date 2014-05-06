@@ -6,9 +6,12 @@ class Dashmenuitem extends CI_Controller {
     {
         parent::__construct();
         $this->load->model('menuitem_model');
+
         $this->load->helper('url');
         $this->load->helper('form');
+
         $this->load->library('form_validation');
+        $this->load->library('ion_auth');
     }
 
     public function create($restaurant, $type)
@@ -27,7 +30,7 @@ class Dashmenuitem extends CI_Controller {
         {
             $this->menuitem_model->insert_menuitem($restaurant, $type,
                 $this->input->post('name'), $this->input->post('description'));
-            redirect('menu/index/'.$restaurant);
+            redirect('dash/menu/');
         }
     }
 
@@ -50,8 +53,7 @@ class Dashmenuitem extends CI_Controller {
         {
             $this->menuitem_model->update_menuitem($id,
                 $this->input->post('name'), $this->input->post('description'));
-            //TODO: redirect to restaurant that owns item
-            redirect('menu/index/'.'1');
+            redirect('dash/menu/');
         }
     }
 
@@ -69,8 +71,7 @@ class Dashmenuitem extends CI_Controller {
         else
         {
             $this->menuitem_model->delete_menuitem($id);
-            //TODO: redirect to restaurant that owns item
-            redirect('menu/index/'.'1');
+            redirect('dash/menu/');
         }
     }
 }

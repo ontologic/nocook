@@ -7,7 +7,7 @@
 foreach ($menuTypes as $menuType) {
     $menuHeader = sprintf('<h4>%s ($%s) (%s-%s)</h4>', $menuType['name'], $menuType['price'], $menuType['minimum'], $menuType['maximum']);
     echo $menuHeader;
-    $createItemHref = sprintf('%smenuitem/create/%s/%s', base_url(), $restaurant['id'], $menuType['id']);
+    $createItemHref = sprintf('%sdash/menuitem/create/%s/%s', base_url(), $restaurant['id'], $menuType['id']);
     echo '<a href="'.$createItemHref.'">';
     echo '<button class="btn">Create</button></a>';
     echo '<table class="table"><thead><tr><th>Name</th><th>Description</th><th>Price</th><th>Actions</th></tr></thead><tbody>';
@@ -24,8 +24,8 @@ foreach ($menuTypes as $menuType) {
         echo '<td>'.$menuItem['description'].'</td>';
         echo '<td>$'.$menuType['price'].'</td>';
         echo '<td>';
-            $editItemUrl = sprintf('%smenuitem/edit/%s', base_url(), $menuItem['id']);
-            $deleteItemUrl = sprintf('%smenuitem/delete/%s', base_url(), $menuItem['id']);
+            $editItemUrl = sprintf('%sdash/menuitem/edit/%s', base_url(), $menuItem['id']);
+            $deleteItemUrl = sprintf('%sdash/menuitem/delete/%s', base_url(), $menuItem['id']);
             echo '<div class="btn-group"><a href="'.$editItemUrl.'"><button class="btn btn-primary">Edit</button></a></div>';
             echo '<div class="btn-group"><a href="'.$deleteItemUrl.'"<button class="btn btn-danger">Delete</button></div>';
         echo '</td>';

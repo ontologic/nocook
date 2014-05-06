@@ -48,6 +48,11 @@ $route['dash/manage/index'] = 'dashmanage';
 $route['dash/manage/create'] = 'dashmanage/create';
 $route['dash/manage/edit/(:any)'] = 'dashmanage/edit/$1';
 
+$route['dash/menu'] = 'dashmenu';
+$route['dash/menuitem/create/(:any)'] = 'dashmenuitem/create/$1/$2';
+$route['dash/menuitem/edit/(:any)'] = 'dashmenuitem/edit/$1';
+$route['dash/menuitem/delete/(:any)'] = 'dashmenuitem/delete/$1';
+
 $route['default_controller'] = "home";
 $route['404_override'] = '';
 
