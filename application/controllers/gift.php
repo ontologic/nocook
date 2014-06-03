@@ -32,7 +32,7 @@ class Gift extends CI_Controller {
             $data['giftItems'] = $this->gift_model->get_gift_menuitemtypes($gift['id']);
             $restaurant = $this->restaurant_model->get_restaurant($gift['restaurant']);
             $data['menu'] = $this->menuitem_model->get_menuitems($restaurant['id']);
-            $data['menuTypes'] = $this->menuitemtype_model->get_menutypes_with_prices($restaurant['id']);
+            $data['menuTypes'] = $this->menuitemtype_model->get_menutypes();
             /*print_r($gift);
             echo '<br/><br/>';
             print_r($gift_items);

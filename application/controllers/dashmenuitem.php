@@ -14,9 +14,9 @@ class Dashmenuitem extends CI_Controller {
         $this->load->library('ion_auth');
     }
 
-    public function create($restaurant, $type)
+    public function create($type)
     {
-        if($restaurant == null || $type == null)
+        if($type == null)
         {
             show_404();
         }
@@ -28,6 +28,7 @@ class Dashmenuitem extends CI_Controller {
         }
         else
         {
+            $restaurant = $this->ion_auth->user()->row()->restaurant;
             $this->menuitem_model->insert_menuitem($restaurant, $type,
                 $this->input->post('name'), $this->input->post('description'));
             redirect('dash/menu/');

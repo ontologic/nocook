@@ -36,24 +36,33 @@ class Home extends CI_Controller {
 
     public function zip()
     {
-        $this->form_validation->set_rules('zip', 'Zip Code', 'required|exact_length[5]');
+        $this->form_validation->set_rules('zip', 'Zip Code', 'required|exact_length[5]|callback_zip_validation');
         if ($this->form_validation->run() === FALSE)
         {
-            $this->load->view('home/zip');
+            $this->data['zip'] = array(
+                'name' => 'zip',
+                'id' => 'zip',
+                'type' => 'text',
+                'value' => $this->form_validation->set_value('zip'),
+            );
+            $this->load->view('home/zip', $this->data);
             return;
         }
         else
         {
-            $zip = $_POST['zip'];
-            if($this->restaurant_model->does_restaurant_exist($zip))
-            {
-                redirect('home/menu/'.$zip);
-            }
-            else
-            {
-                echo 'No restaurant for that zip.';
-                $this->load->view('home/zip');
-            }
+            $zip = $this->input->post('zip');
+            $this->session->set_userdata('zip', $zip);
+            redirect('home/menu/'.$zip);
+        }
+    }
+
+    public function zip_validation()
+    {
+        $zip = $this->input->post('zip');
+        if(!$this->restaurant_model->does_restaurant_exist($zip))
+        {
+            $this->form_validation->set_message('zip_validation', 'No restaurant exists for zip '.$zip.'.');
+            return false;
         }
     }
 
@@ -69,7 +78,7 @@ class Home extends CI_Controller {
         }
         $restaurantId = $this->get_restaurant_id($zip);
         $data['menu'] = $this->menuitem_model->get_menuitems($restaurantId);
-        $data['menuTypes'] = $this->menuitemtype_model->get_menutypes_with_prices($restaurantId);
+        $data['menuTypes'] = $this->menuitemtype_model->get_menutypes();
         $data['restaurant'] = $this->restaurant_model->get_restaurant($restaurantId);
         $data['zip'] = $zip;
         $this->load->view('home/menu', $data);
@@ -82,165 +91,231 @@ class Home extends CI_Controller {
         return $restaurantId;
     }
 
-    public function order($zip = '')
+    public function amount()
     {
-        if($zip == '')
-        {
-            redirect('home/zip');
-        }
-
-        $restaurant = $this->restaurant_model->get_restaurant_by_zip($zip);
-        $menu = $this->menuitem_model->get_menuitems($restaurant['id']);
-        $firstMenuItem = reset($menu);
-
-        $this->form_validation->set_rules($firstMenuItem['id'], $firstMenuItem['id'], 'callback_order_validation');
+        $this->form_validation->set_rules('adults', 'Adults', 'required|callback_amount_validation');
+        $this->form_validation->set_rules('children', 'Children', 'required');
+        $this->form_validation->set_rules('type', 'Type', 'required');
         if ($this->form_validation->run() === FALSE)
         {
-            $data['restaurant'] = $restaurant;
-            $data['menu'] = $menu;
-            $data['menuTypes'] = $this->menuitemtype_model->get_menutypes_with_prices($restaurant['id']);
-            $this->load->view('home/order', $data);
+            $this->data['adults'] = array(
+                'name' => 'adults',
+                'id' => 'adults',
+                'type' => 'text',
+                'value' => $this->form_validation->set_value('adults'),
+            );
+            $this->data['children'] = array(
+                'name' => 'children',
+                'id' => 'children',
+                'type' => 'text',
+                'value' => $this->form_validation->set_value('children'),
+            );
+            $this->data['self'] = array(
+                'name' => 'type',
+                'id' => 'type',
+                'type' => 'radio',
+                'value' => '1',
+            );
+            $this->data['gift'] = array(
+                'name' => 'type',
+                'id' => 'type',
+                'type' => 'radio',
+                'value' => '2',
+            );
+            $this->load->view('home/amount', $this->data);
         }
         else
         {
-            $restaurant = $this->restaurant_model->get_restaurant_by_zip($zip);
-            $this->session->set_userdata('restaurant', $restaurant);
-            $this->session->set_userdata('is_gift', false);
-            $data = array();
-            foreach ($_POST as $itemId => $quantity)
-            {
-                if($quantity > 0)
-                {
-                    //echo 'q:' . $quantity . ' item:' . $itemId . '<br>';
-                    $menuItem = $this->menuitem_model->get_menuitem_with_price($itemId);
-                    //print_r($menuItem);
-                    $itemToAdd = array(
-                        'id'      => $itemId,
-                        'qty'     => $quantity,
-                        'price'   => $menuItem['price'],
-                        'name'    => $menuItem['name']
-                    );
-                    array_push($data, $itemToAdd);
-                }
-            }
-            //print_r($data);
-            $this->cart->destroy();
-            $this->cart->insert($data);
-            //print_r($this->cart->contents());
-            redirect('home/delivery');
+            $adults = $this->input->post('adults');
+            $children = $this->input->post('children');
+            $type = $this->input->post('type');
+            $this->session->set_userdata('adults', $adults);
+            $this->session->set_userdata('children', $children);
+            $this->session->set_userdata('type', $type);
+            //print_r($this->session->all_userdata());
+            redirect('home/receiver', 'refresh');
         }
     }
 
-    //Form validation for order POST
-    public function order_validation()
+    public function amount_validation()
     {
-        $totalQuantity = 0;
-        foreach ($_POST as $itemId => $quantity)
+        $adults = $this->input->post('adults');
+        $children = $this->input->post('children');
+        $total = $adults + $children;
+        if($total <= 0)
         {
-            if(!is_int($itemId)){ break; }
-            if($quantity < 0)
-            {
-                $this->form_validation->set_message('order_validation', 'All quantities must be positive values.');
-                return false;
-            }
-            $totalQuantity += $quantity;
-        }
-        if($totalQuantity == 0)
-        {
-            $this->form_validation->set_message('order_validation', 'You must order at least one item.');
+            $this->form_validation->set_message('amount_validation', 'You must order for at least one person.');
             return false;
         }
         return true;
     }
 
-    public function gift($zip = '')
+    public function receiver()
     {
-        if($zip == '')
-        {
-            redirect('home/zip');
-        }
-        //TODO: This will work as long as you have a menuitemtype of 1
-        $this->form_validation->set_rules('1', '1', 'callback_order_validation');
-        if ($this->form_validation->run() === FALSE)
-        {
-            $restaurantId = $this->get_restaurant_id($zip);
-            $data['menu'] = $this->menuitem_model->get_menuitems($restaurantId);
-            $data['menuTypes'] = $this->menuitemtype_model->get_menutypes_with_prices($restaurantId);
-            $data['restaurant'] = $this->restaurant_model->get_restaurant($restaurantId);
-            $this->load->view('home/gift', $data);
-        }
-        else
-        {
-            $restaurant = $this->restaurant_model->get_restaurant_by_zip($zip);
-            $this->session->set_userdata('restaurant', $restaurant);
-            $this->session->set_userdata('is_gift', true);
-            $data = array();
-            foreach ($_POST as $itemType => $quantity)
-            {
-                if($quantity > 0)
-                {
-                    //echo 'q:' . $quantity . ' item:' . $itemId . '<br>';
-                    $menuItemType = $this->menuitemtype_model->get_menuitemtype_with_price($restaurant['id'], $itemType);
-                    //print_r($menuItemType);
-                    $itemToAdd = array(
-                        'id'      => $itemType,
-                        'qty'     => $quantity,
-                        'price'   => $menuItemType['price'],
-                        'name'    => $menuItemType['name']
-                    );
-                    array_push($data, $itemToAdd);
-                }
-            }
-            //echo '<br/><br/>';
-            //print_r($data);
-            $this->cart->destroy();
-            $this->cart->insert($data);
-
-            //echo '<br/><br/>';
-            //print_r($this->cart->contents());
-            redirect('home/confirm');
-        }
-    }
-
-    //Form validation for order POST
-    public function gift_validation()
-    {
-        $totalQuantity = 0;
-        foreach ($_POST as $itemId => $quantity)
-        {
-            if(!is_int($itemId)){ break; }
-            if($quantity < 0)
-            {
-                $this->form_validation->set_message('gift_validation', 'All quantities must be positive values.');
-                return false;
-            }
-            $totalQuantity += $quantity;
-        }
-        if($totalQuantity == 0)
-        {
-            $this->form_validation->set_message('order_validation', 'You must order at least one item.');
-            return false;
-        }
-        return true;
-    }
-
-    public function delivery()
-    {
-        $this->form_validation->set_rules('lineOne', 'Address Line One', 'required');
-        $this->form_validation->set_rules('city', 'City', 'required');
-        $this->form_validation->set_rules('state', 'State', 'required');
-        $this->form_validation->set_rules('zip', 'Zip Code', 'required|exact_length[5]');
+        $this->form_validation->set_rules('first', 'First Name', 'required');
+        $this->form_validation->set_rules('last', 'Last Name', 'required');
+        $this->form_validation->set_rules('address', 'Address', 'required');
         $this->form_validation->set_rules('telephone', 'Telephone', 'required');
+        //$this->form_validation->set_rules('zip', 'Zip', 'required');
         if ($this->form_validation->run() === FALSE)
         {
-            $this->load->view('home/delivery');
+            $this->data['first'] = array(
+                'name' => 'first',
+                'id' => 'first',
+                'type' => 'text',
+                'value' => $this->form_validation->set_value('first'),
+            );
+            $this->data['last'] = array(
+                'name' => 'last',
+                'id' => 'last',
+                'type' => 'text',
+                'value' => $this->form_validation->set_value('last'),
+            );
+            $this->data['address'] = array(
+                'name' => 'address',
+                'id' => 'address',
+                'type' => 'text',
+                'value' => $this->form_validation->set_value('address'),
+            );
+            $this->data['zip'] = array(
+                'name' => 'telephone',
+                'id' => 'telephone',
+                'type' => 'text',
+                'value' => $this->session->userdata('zip'),
+                'readonly' => 'true'
+            );
+            $this->data['telephone'] = array(
+                'name' => 'telephone',
+                'id' => 'telephone',
+                'type' => 'text',
+                'value' => $this->form_validation->set_value('telephone'),
+            );
+            $this->load->view('home/receiver', $this->data);
             return;
         }
         else
         {
-            $this->session->set_userdata('delivery', $_POST);
-            redirect('home/confirm');
+            $this->session->set_userdata('receiver', $_POST);
+            //print_r($this->session->all_userdata());
+            redirect('home/notify');
         }
+    }
+
+    public function notify()
+    {
+        $this->form_validation->set_rules('notification', 'Delivery Type', 'required');
+        if ($this->form_validation->run() === FALSE)
+        {
+            $this->data['note'] = array(
+                'name' => 'note',
+                'id' => 'note',
+                'type' => 'textarea',
+                'value' => $this->form_validation->set_value('note')
+            );
+            $this->load->view('home/notify', $this->data);
+        }
+        else
+        {
+            $this->session->set_userdata('notification', $_POST);
+            //print_r($this->session->all_userdata());
+            redirect('home/choose', 'refresh');
+        }
+    }
+
+    public function choose()
+    {
+        $this->form_validation->set_rules('picking', 'Delivery Type', 'callback_choose_validation|required');
+        if ($this->form_validation->run() === FALSE)
+        {
+            $this->data['picking'] = array(
+                'name' => 'picking',
+                'id' => 'picking',
+                'type' => 'text',
+                'value' => $this->form_validation->set_value('picking')
+            );
+            $this->data['date'] = array(
+                'name' => 'date',
+                'id' => 'date',
+                'type' => 'text',
+                'value' => $this->form_validation->set_value('date')
+            );
+            $this->load->view('home/choose', $this->data);
+        }
+        else
+        {
+            $this->session->set_userdata('choose', $_POST);
+            //print_r($this->session->all_userdata());
+            redirect('home/order', 'refresh');
+        }
+    }
+
+    public function choose_validation()
+    {
+        $picking = $this->input->post('picking');
+        $date = $this->input->post('date');
+        if($picking == 'true' && empty($date))
+        {
+            $this->form_validation->set_message('choose_validation', 'You must choose a delivery date.');
+            return false;
+        }
+        return true;
+    }
+
+    public function order()
+    {
+        $zip = $this->session->userdata('zip');
+        $restaurant = $this->restaurant_model->get_restaurant_by_zip($zip);
+        $menu = $this->menuitem_model->get_menuitems($restaurant['id']);
+        $menuTypes = $this->menuitemtype_model->get_menutypes();
+        $firstMenuType = reset($menuTypes);
+
+        $this->form_validation->set_rules($firstMenuType['id'], $firstMenuType['id'], 'callback_order_validation');
+        if ($this->form_validation->run() === FALSE)
+        {
+            $data['restaurant'] = $restaurant;
+            $data['menu'] = $menu;
+            $data['menuTypes'] = $menuTypes;
+            $this->load->view('home/order', $data);
+        }
+        else
+        {
+            //print_r($_POST);
+            $restaurant = $this->restaurant_model->get_restaurant_by_zip($zip);
+            $this->session->set_userdata('restaurant', $restaurant);
+            $data = array();
+            foreach ($_POST as $itemId)
+            {
+                //echo 'q:' . $quantity . ' item:' . $itemId . '<br>';
+                $menuItem = $this->menuitem_model->get_menuitem($itemId);
+                //print_r($menuItem);
+                $itemToAdd = array(
+                    'id'      => $itemId,
+                    'qty'     => 2,
+                    'price'   => 42,
+                    'name'    => $menuItem['name']
+                );
+                array_push($data, $itemToAdd);
+            }
+            //print_r($data);
+            $this->cart->destroy();
+            $this->cart->insert($data);
+            print_r($this->cart->contents());
+            echo '<br/><br/>';
+            print_r($this->session->all_userdata());
+            //redirect('home/delivery');
+        }
+    }
+
+    public function order_validation()
+    {
+        $selectedTypes = count($_POST);
+        $menuTypes = $this->menuitemtype_model->get_menutypes();
+        if($selectedTypes != count($menuTypes))
+        {
+            $this->form_validation->set_message('order_validation', 'Please make a choice for each item type.');
+            return false;
+        }
+        return true;
     }
 
     public function confirm()
@@ -262,9 +337,15 @@ class Home extends CI_Controller {
                 echo '<br><br>';
             }
             //print_r($data);
+            $restaurant = $this->session->userdata('restaurant');
+            $subtotal = $this->cart->total();
+            $tax = round((($restaurant['tax_percent'] / 100) * $subtotal), 2);
+            $total = ($tax + $subtotal);
             print_r($this->cart->contents());
             echo '<br><br>';
-            echo 'total: '.$this->cart->total();
+            echo 'tax: '.$tax;
+            echo '<br><br>';
+            echo 'total: '.$total;
             echo '<br><br>';
             echo 'username: '.$this->ion_auth->user()->row()->username;
             echo ' id: '.$this->ion_auth->user()->row()->id;
@@ -274,9 +355,9 @@ class Home extends CI_Controller {
                   <script
                     src="https://checkout.stripe.com/checkout.js" class="stripe-button"
                     data-key="pk_test_NFIOMm4WLLZSkhEElOZn0KdH"
-                    data-amount="'.($this->cart->total()*100).'"
+                    data-amount="'.($total * 100).'"
                     data-name="Not Cooking Tonight"
-                    data-description="$'.$this->cart->total().'"
+                    data-description="$'.$total.'"
                     data-image="../assets/img/salad.jpg"
                     data-email="'.$this->ion_auth->user()->row()->email.'">
                   </script>
@@ -290,9 +371,12 @@ class Home extends CI_Controller {
             $token = $_POST['stripeToken'];
             try
             {
-                $cartTotal = $this->cart->total();
+                $restaurant = $this->session->userdata('restaurant');
+                $subtotal = $this->cart->total();
+                $tax = round((($restaurant['tax_percent'] / 100) * $subtotal), 2);
+                $total = ($tax + $subtotal);
                 $charge = Stripe_Charge::create(array(
-                        "amount" => ($cartTotal * 100), //amount in cents
+                        "amount" => ($total * 100), //amount in cents
                         "currency" => "usd",
                         "card" => $token)
                 );

@@ -6,9 +6,9 @@
 
         <?php echo form_open(null, array('role' => 'form')) ?>
         <?php foreach ($menuTypes as $menuType) {
-            $menuHeader = sprintf('<h4>%s ($%s)</h4>', $menuType['name'], $menuType['price']);
+            $menuHeader = sprintf('<h4>%s</h4>', $menuType['name']);
             echo $menuHeader;
-            echo '<table class="table"><thead><tr><th>Name</th><th>Description</th><th>Price</th><th>Quantity</th></tr></thead><tbody>';
+            echo '<table class="table"><thead><tr><th></th><th>Name</th><th>Description</th></tr></thead><tbody>';
 
             $findMenuItemsOfType = function ($menuItemType)
             {
@@ -18,10 +18,9 @@
             foreach($menuItemsOfType as $menuItem)
             {
                 echo '<tr>';
-                echo '<td>'.$menuItem['name'].'</td>';
-                echo '<td>'.$menuItem['description'].'</td>';
-                echo '<td>$'.$menuType['price'].'</td>';
-                echo '<td><input name="'.$menuItem['id'].'" type="number" value="0" /></td>';
+                    echo '<td><input type="radio" name="'.$menuType['id'].'" value="'.$menuItem['id'].'"></td>';
+                    echo '<td>'.$menuItem['name'].'</td>';
+                    echo '<td>'.$menuItem['description'].'</td>';
                 echo '</tr>';
             }
             echo '</tbody></table><br/>';

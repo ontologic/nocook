@@ -12,17 +12,6 @@ class Menuitem_model extends CI_Model {
         return $query->row_array();
     }
 
-    public function get_menuitem_with_price($id)
-    {
-        $this->db->select('*');
-        $this->db->from('menuitem');
-        $this->db->join('restaurant_menuitemtype',
-            'menuitem.restaurant = restaurant_menuitemtype.restaurant AND menuitem.menuitemtype = restaurant_menuitemtype.menuitemtype');
-        $this->db->where('menuitem.id', $id);
-        $query = $this->db->get();
-        return $query->row_array();
-    }
-
     public function get_menuitems($restaurant)
     {
         $query = $this->db->get_where('menuitem', array('restaurant' => $restaurant));

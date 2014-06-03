@@ -18,7 +18,7 @@ class Dashmenu extends CI_Controller {
     {
         $restaurant = $this->ion_auth->user()->row()->restaurant;
         $data['menu'] = $this->menuitem_model->get_menuitems($restaurant);
-        $data['menuTypes'] = $this->menuitemtype_model->get_menutypes_with_prices($restaurant);
+        $data['menuTypes'] = $this->menuitemtype_model->get_menutypes();
         $data['restaurant'] = $this->restaurant_model->get_restaurant($restaurant);
         $this->load->view('dash/menu/index', $data);
     }
